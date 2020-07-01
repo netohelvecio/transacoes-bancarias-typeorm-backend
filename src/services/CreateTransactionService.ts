@@ -4,7 +4,7 @@ import TransactionsRepository from '../repositories/TransactionsRepository';
 import Transaction from '../models/Transaction';
 import Category from '../models/Category';
 
-// import AppError from '../errors/AppError';
+import AppError from '../errors/AppError';
 
 interface Request {
   title: string;
@@ -22,6 +22,14 @@ class CreateTransactionService {
   }: Request): Promise<Transaction> {
     const transactionRepository = getCustomRepository(TransactionsRepository);
     const categoryRepository = getRepository(Category);
+
+    const balance = await transactionRepository.getBalance();
+
+    if (type === 'outcome' && balance.total < value) {
+      throw new AppError(
+        'Transação inválida, pois valor em conta menor é que o valor de retirada',
+      );
+    }
 
     const categoryExists = await categoryRepository.findOne({
       where: { title: category },
